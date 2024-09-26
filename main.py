@@ -2,6 +2,7 @@ import pygame
 import os
 
 pygame.init()
+print("comentado")
 ventana = pygame.display.set_mode((1280,720))
 clock = pygame.time.Clock()
 abierto = True
