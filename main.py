@@ -1,21 +1,31 @@
 import pygame
 import os
+from leer import devolverMapas
+
+def get_mapaSprit(map:"{str,str}"):
+    MapaSprit = {}
+    for i in map:
+        MapaSprit[i] = pygame.image.load(map[i])
+    return MapaSprit
 
 pygame.init()
 ventana = pygame.display.set_mode((1280,720))
 clock = pygame.time.Clock()
 abierto = True
 
+MapaNombre,MapaEscala = devolverMapas()
+MapaScript = get_mapaSprit(MapaNombre)
+print(MapaScript)
 rosa = pygame.image.load("./Dibujos/Rosa.png")
 azul = pygame.image.load("./Dibujos/Azul.png")
 verde = pygame.image.load("./Dibujos/Verde.png")
 matriz = [
-    [0,1,2,1,2,0],
-    [2,1,0,0,1,2],
-    [1,2,0,1,2,1],
-    [0,1,2,2,0,1],
-    [2,1,0,2,0,1],
-    [1,2,0,0,2,1]
+    ["AgPro","AgPro","AgPro","Niev","Niev","AgPro","AgPro","AgPro","AgPro","AgPro"],
+    ["AgPro","Ag","Ag","Niev","Niev","Ag","Ag","AgPro"],
+    ["AgPro","Ag","Tie","A","A","Tie","Ag","AgPro"],
+    ["AgPro","Ag","Tie","A","A","Tie","Ag","AgPro"],
+    ["AgPro","Ag","Ag","Cam","Cam","Ag","Ag","AgPro"],
+    ["AgPro","AgPro","AgPro","AgPro","AgPro","AgPro","AgPro","AgPro"]
 ]
 mx = 100
 my = 100
@@ -35,22 +45,16 @@ while abierto:
     listImagnes = []
     cont += 1
     for i in range(len(matriz)):
-        for j in range(len(matriz[0])):
-            if matriz[i][j] == 0:
-                listImagnes.append(rosa)
-                rosaAux = rosa.get_rect()
-                rosaAux.move_ip(i*dx+mx,j*dy+my)
-                listCosas.append(rosaAux)
-            elif matriz[i][j] == 1:
-                listImagnes.append(azul)
-                azulAux = azul.get_rect()
-                azulAux.move_ip(i*dx+mx,j*dy+my)
-                listCosas.append(azulAux)
-            elif matriz[i][j] == 2:
-                listImagnes.append(verde)
-                verdeAux = verde.get_rect()
-                verdeAux.move_ip(i*dx+mx,j*dy+my)
-                listCosas.append(verdeAux)
+        for j in range(len(matriz[i])):
+            valor = matriz[i][j]
+            listImagnes.append(pygame.transform.scale(
+                    MapaScript[valor],
+                    (dx*MapaEscala[valor][0],dy*MapaEscala[valor][1])
+                    )
+                )
+            rectAux = MapaScript[valor].get_rect()
+            rectAux.move_ip(j*dx+mx,i*dy+my)
+            listCosas.append(rectAux)
 
     #dibujar
     for i in range(len(listImagnes)):

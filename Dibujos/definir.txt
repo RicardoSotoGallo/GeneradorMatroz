@@ -1,0 +1,7 @@
+A:./Dibujos/arena1.jpeg:1,1
+Ag:./Dibujos/agua1.jpeg:1,1
+AgPro:./Dibujos/agua2.jpeg:1,1
+Cam:./Dibujos/camino1.jpeg:1,1
+Lago:./Dibujos/lago1.jpeg:1,1
+Niev:./Dibujos/nieve1.jpeg:1,1
+Tie:./Dibujos/tierra1.jpeg:1,1
