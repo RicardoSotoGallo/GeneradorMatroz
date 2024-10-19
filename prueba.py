@@ -1,8 +1,5 @@
-matriz = [
-    [0,1,2],
-    [2,1,0],
-    [0,1,2],
-]
-for i in matriz:
-    for j in i:
-        print(j)
+import numpy as np
+c = np.load("entrda\plano.npy")
+print(c)
+print(c.shape)
+print(c[0,1])

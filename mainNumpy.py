@@ -1,6 +1,7 @@
 import pygame
+import numpy as np
 import os
-from leer import devolverMapas
+from leerNumpy import devolverMapas
 
 def get_mapaSprit(map:"{str,str}"):
     MapaSprit = {}
@@ -9,7 +10,7 @@ def get_mapaSprit(map:"{str,str}"):
     return MapaSprit
 
 pygame.init()
-ventana = pygame.display.set_mode((1280,720))
+ventana = pygame.display.set_mode((1480,720))
 clock = pygame.time.Clock()
 abierto = True
 
@@ -19,23 +20,16 @@ print(MapaScript)
 rosa = pygame.image.load("./Dibujos/Rosa.png")
 azul = pygame.image.load("./Dibujos/Azul.png")
 verde = pygame.image.load("./Dibujos/Verde.png")
-matriz = [
-    ["AgPro","AgPro","AgPro","AgPro","AgPro","AgPro","AgPro","AgPro"],
-    ["AgPro","Ag","Ag","Niev","Niev","Ag","Ag","AgPro"],
-    ["AgPro","Ag","Tie","A","A","Tie","Ag","AgPro"],
-    ["AgPro","Ag","Tie","A","A","Tie","Ag","AgPro"],
-    ["AgPro","Ag","Ag","Cam","Cam","Ag","Ag","AgPro"],
-    ["AgPro","AgPro","AgPro","AgPro","AgPro","AgPro","AgPro","AgPro"]
-]
-mx = 100
-my = 100
-dx = 30
-dy = 30
-sx= 0
-sy = 0
+matriz = np.load("entrda\plano3_3.npy")
+mx = 10
+my = 10
+dx = 10
+dy = 10
+sx= 10
+sy = 10
 cont = 0
-tamanox = len(matriz)
-tamanoy = len(matriz[0])
+tamanox = matriz.shape[0]
+tamanoy = matriz.shape[1]
 while abierto:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -48,7 +42,7 @@ while abierto:
     cont += 1
     for i in range(tamanox):
         for j in range(tamanoy):
-            valor = matriz[i][j]
+            valor = str(int( matriz[i,j]))
             listImagnes.append(pygame.transform.scale(
                     MapaScript[valor],
                     (dx*MapaEscala[valor][0],dy*MapaEscala[valor][1])

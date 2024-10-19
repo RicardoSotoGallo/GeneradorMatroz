@@ -1,0 +1,17 @@
+0:./Dibujos/AGUA0O.png:1,1
+1:./Dibujos/AGUA0OP.png:1,1
+2:./Dibujos/AGUA0R.png:1,1
+3:./Dibujos/SAND0.png:1,1
+4:./Dibujos/POLO0.png:1,1
+5:./Dibujos/AGUA0P.png:1,1
+6:./Dibujos/DEHESA0.png:1,1
+7:./Dibujos/SELVA0.png:1,1
+8:./Dibujos/SAVANA0.png:1,1
+9:./Dibujos/SAND0.png:1,1
+10:./Dibujos/SETAS0.png:1,1
+12:./Dibujos/SAKURA0.png:1,1
+13:./Dibujos/BOSQUE0.png:1,1
+14:./Dibujos/MESETA0.png:1,1
+15:./Dibujos/TUNDRA0.png:1,1
+16:./Dibujos/VOLCAN0.png:1,1
+17:./Dibujos/MONTANA0.png:1,1
