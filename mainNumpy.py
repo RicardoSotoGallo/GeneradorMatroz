@@ -29,25 +29,26 @@ while abierto:
         if event.type == pygame.QUIT:
             abierto = False
         #teclado
-        if event.type == pygame.KEYDOWN and not tecla:
+        if event.type == pygame.KEYDOWN:
             borrarTecla = 0
             teclaPulsada = event.key
             tecla = True
         elif event.type == pygame.KEYUP and tecla:
-            tecla = False
+            if teclaPulsada == event.key:
+                tecla = False
     if tecla:
         #print(f"{borrarTecla} -> teclado")
         borrarTecla -= 1
         if borrarTecla <= 0:
             borrarTecla = 0
-            if teclaPulsada == pygame.K_LEFT:
+            if teclaPulsada == pygame.K_a:
                 #mx = max([-matriz.shape[0]*dx,mx + dx])
                 mx = min([0, (mx + dx * 10)])
-            if teclaPulsada == pygame.K_RIGHT:
+            if teclaPulsada == pygame.K_d:
                 mx = max([-matriz.shape[0]*dx+ventanax, (mx - dx*10)])
-            if teclaPulsada == pygame.K_UP:
+            if teclaPulsada == pygame.K_w:
                 my = min([0, (my + dy * 10)]) 
-            if teclaPulsada == pygame.K_DOWN:
+            if teclaPulsada == pygame.K_s:
                 my = max([-matriz.shape[1]*dy+ventanay, (my - dy*10)])
     clock.tick(60)
     ventana.fill("black")
