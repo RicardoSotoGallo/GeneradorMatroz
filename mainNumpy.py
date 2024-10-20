@@ -2,59 +2,58 @@ import pygame
 import numpy as np
 import os
 from leerNumpy import devolverMapas
-
-def get_mapaSprit(map:"{str,str}"):
-    MapaSprit = {}
-    for i in map:
-        MapaSprit[i] = pygame.image.load(map[i])
-    return MapaSprit
+from funciones import *
 
 pygame.init()
-ventana = pygame.display.set_mode((1480,720))
+ventanax= 980
+ventanay = 520
+ventana = pygame.display.set_mode((ventanax,ventanay))
 clock = pygame.time.Clock()
 abierto = True
 
 MapaNombre,MapaEscala = devolverMapas()
 MapaScript = get_mapaSprit(MapaNombre)
 print(MapaScript)
-rosa = pygame.image.load("./Dibujos/Rosa.png")
-azul = pygame.image.load("./Dibujos/Azul.png")
-verde = pygame.image.load("./Dibujos/Verde.png")
 matriz = np.load("entrda\plano3_3.npy")
-mx = 10
-my = 10
-dx = 10
-dy = 10
+mx = 0
+my = 0
+dx = 20
+dy = 20
 sx= 10
 sy = 10
-cont = 0
-tamanox = matriz.shape[0]
-tamanoy = matriz.shape[1]
+tecla = False
+borrarTecla = 0
+teclaPulsada = None
 while abierto:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             abierto = False
-    clock.tick(60)  
+        #teclado
+        if event.type == pygame.KEYDOWN and not tecla:
+            borrarTecla = 0
+            teclaPulsada = event.key
+            tecla = True
+        elif event.type == pygame.KEYUP and tecla:
+            tecla = False
+    if tecla:
+        #print(f"{borrarTecla} -> teclado")
+        borrarTecla -= 1
+        if borrarTecla <= 0:
+            borrarTecla = 0
+            if teclaPulsada == pygame.K_LEFT:
+                #mx = max([-matriz.shape[0]*dx,mx + dx])
+                mx = min([0, (mx + dx * 10)])
+            if teclaPulsada == pygame.K_RIGHT:
+                mx = max([-matriz.shape[0]*dx+ventanax, (mx - dx*10)])
+            if teclaPulsada == pygame.K_UP:
+                my = min([0, (my + dy * 10)]) 
+            if teclaPulsada == pygame.K_DOWN:
+                my = max([-matriz.shape[1]*dy+ventanay, (my - dy*10)])
+    clock.tick(60)
     ventana.fill("black")
-    #Programar
-    listCosas = []
-    listImagnes = []
-    cont += 1
-    for i in range(tamanox):
-        for j in range(tamanoy):
-            valor = str(int( matriz[i,j]))
-            listImagnes.append(pygame.transform.scale(
-                    MapaScript[valor],
-                    (dx*MapaEscala[valor][0],dy*MapaEscala[valor][1])
-                    )
-                )
-            rectAux = MapaScript[valor].get_rect()
-            rectAux.move_ip(j*dx+mx,i*dy+my)
-            listCosas.append(rectAux)
-
-    #dibujar
-    for i in range(len(listImagnes)):
-        ventana.blit(listImagnes[i],listCosas[i])
+    #listImagnes,listCosas = 
+    dibujar_fondo(matriz=matriz,dx=dx,dy=dy,mx=mx,my=my,MapaScript=MapaScript,MapaEscala=MapaEscala,ventana=ventana)
     pygame.display.flip()
+    
 
 pygame.quit()
