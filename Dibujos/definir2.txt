@@ -15,3 +15,15 @@
 15:./Dibujos/TUNDRA0.png:1,1
 16:./Dibujos/VOLCAN0.png:1,1
 17:./Dibujos/MONTANA0.png:1,1
+100:./Dibujos/persoanjes/p_back_1.png:2,2
+101:./Dibujos/persoanjes/p_back_2.png:2,2
+102:./Dibujos/persoanjes/p_back_3.png:2,2
+103:./Dibujos/persoanjes/p_der_1.png:2,2
+104:./Dibujos/persoanjes/p_der_2.png:2,2
+105:./Dibujos/persoanjes/p_der_3.png:2,2
+106:./Dibujos/persoanjes/p_izq_1.png:2,2
+107:./Dibujos/persoanjes/p_izq_2.png:2,2
+108:./Dibujos/persoanjes/p_izq_3.png:2,2
+109:./Dibujos/persoanjes/p_rect_1.png:2,2
+110:./Dibujos/persoanjes/p_rect_2.png:2,2
+111:./Dibujos/persoanjes/p_rect_3.png:2,2
