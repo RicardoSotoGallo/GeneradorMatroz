@@ -6,7 +6,7 @@ from funciones import *
 from seres import *
 
 pygame.init()
-ventanax= 1480
+ventanax= 1000
 ventanay = 800
 ventana = pygame.display.set_mode((ventanax,ventanay))
 clock = pygame.time.Clock()
@@ -16,7 +16,7 @@ frameMaximo = 30
 
 MapaNombre,MapaEscala = devolverMapas()
 MapaScript = get_mapaSprit(MapaNombre)
-matriz = np.load("entrda\plano3_3.npy")
+matriz = iniciarMapa()
 actualX = int(matriz.shape[0]/2)
 actualY = int(matriz.shape[0]/2)
 dx = 20
@@ -24,6 +24,8 @@ dy = 20
 botonesValidos = [pygame.K_a,pygame.K_s,pygame.K_d,pygame.K_w]
 teclaPulsadaLista = []
 prota = protagonista(nombreImagenes=MapaScript,escalaImagenes=MapaEscala,frameMaxmimo=frameMaximo,botonesValidos=botonesValidos)
+
+
 
 
 while abierto:
