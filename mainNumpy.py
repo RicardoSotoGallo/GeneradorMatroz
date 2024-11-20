@@ -5,6 +5,7 @@ from disenarMapa import *
 from seres import *
 import os
 
+#pruebas
 pygame.init()   #Iniciar juego
 ventanax = 700  #Definir el tamaño x de la ventana
 ventanay = 700  #Definir el tamaño y de la ventana
