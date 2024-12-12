@@ -27,3 +27,4 @@
 109:./Dibujos/persoanjes/p_rect_1.png:2,2
 110:./Dibujos/persoanjes/p_rect_2.png:2,2
 111:./Dibujos/persoanjes/p_rect_3.png:2,2
+200:./Dibujos/arbolJuego.jpg:1,1
