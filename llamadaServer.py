@@ -1,91 +1,115 @@
-import asyncio
-import websockets
-import json
-import os
+import requests
+import random
 import numpy as np
+import time
+import os
 
-async def enviar_posicion(websocket, x, y):
-    mensaje = {
-        "type": "posicion",
-        "x": x,
-        "y": y
-    }
-    await websocket.send(json.dumps(mensaje))
-    print(f"Posición enviada: {mensaje}")
+# URL base del servidor
+base_url = "http://kubernetes.procsmocscimsi.uk/"
+x = 0
+y = 0
 
-async def recibir_posiciones(websocket):
-    mensaje = {
-        "type": "recibir_posiciones"
-    }
-    await websocket.send(json.dumps(mensaje))
-    while True:
-        respuesta = await websocket.recv()
-        data = json.loads(respuesta)
-        print(f"Posiciones recibidas: {data}")
-        break
+def siguientePedido(xe,ye):
+    global x,y
+    x = xe
+    y = ye
 
-async def recibir_chunk(websocket, chunk_id):
-    mensaje = {
-        "type": "recibir_chunk",
-        "chunk_id": chunk_id
-    }
-    await websocket.send(json.dumps(mensaje))
-    
-    # Recibir el primer chunk
-    chunk1 = await websocket.recv()
-    # Recibir el segundo chunk
-    chunk2 = await websocket.recv()
-    
-    p1, p2 = chunk_id.split(',')
-    p1 = int(p1)
-    p2 = int(p2)
-    
-    ruta1 = f"entrda/plano{p1}_{p2}.npy"
-    ruta2 = f"arboles/arbol{p1}_{p2}.npy"
-    
-    # Crear directorios si no existen
-    os.makedirs(os.path.dirname(ruta1), exist_ok=True)
-    
-    # Guardar el contenido de los chunks en los archivos
-    chunk1_np = np.array(json.loads(chunk1))
-    chunk2_np = np.array(json.loads(chunk2))
-    np.set_printoptions(threshold=np.inf)
-    #print(chunk1_np)
-    #print(chunk2_np)
-    np.save(ruta1, chunk1_np)
-    np.save(ruta2, chunk2_np)
-    
-    #print(f"Chunks recibidos y guardados en: {ruta1} y {ruta2}")
+# Función para hacer login y obtener un ID de usuario
+def login():
+    response = requests.get(f"{base_url}/login")
+    if response.status_code == 200:
+        data = response.json()
+        print(f"Login exitoso: {data}")
+        return data["id"]
+    else:
+        print(f"Error en login: {response.status_code}")
+        return None
 
-async def main():
-    uri = "ws://localhost:6969/ws"  # Cambia esto a la URL de tu servidor
-    async with websockets.connect(uri) as websocket:
-        print("Conexión establecida con el servidor.")
-        
-        while True:
-            entrada = input("Escribe tu comando: ")
-            
-            if entrada.lower() == "cerrar":
-                print("Cerrando conexión...")
-                break
-            
-            elif "," in entrada:
-                # Recibir chunk
-                await recibir_chunk(websocket, entrada)
-            
-            elif entrada.lower() == "recibir posiciones":
-                # Recibir posiciones
-                await recibir_posiciones(websocket)
-            
-            else:
-                try:
-                    # Mandar posición
-                    x, y = map(float, entrada.split())
-                    await enviar_posicion(websocket, x, y)
-                except ValueError:
-                    print("Entrada no válida. Por favor, escribe las coordenadas en formato 'x y'.")
+# Función para mandar posición
+def mandar_posicion(id, x, y):
+    response = requests.post(f"{base_url}/posicion/{id}/{x}/{y}")
+    if response.status_code == 200:
+        print(f"Posición enviada: {response.json()}")
+    else:
+        print(f"Error al enviar posición: {response.status_code}")
 
-        await websocket.close()
-        print("Conexión cerrada.")
 
-#asyncio.run(main())
+# Función para pedir objeto
+def pedir_objeto(): #x y
+    global x,y
+    response = requests.get(f"{base_url}/objects/{x}/{y}")
+    if response.status_code == 200:
+        #f"arboles/arbol{posiciones[0][0]}_{posiciones[0][1]}.npy"
+        ruta = f"arboles/arbol{x}_{y}.npy"
+        os.makedirs(os.path.dirname(ruta), exist_ok=True)
+        with open(ruta, "wb") as f:
+            f.write(response.content)
+        print(f"Objeto recibido y guardado en: {ruta}")
+        return np.load(ruta)
+    else:
+        print(f"Error al pedir objeto: {response.status_code}")
+        return None
+
+# Función para pedir bioma
+def pedir_bioma(): #x, y
+    global x,y
+    response = requests.get(f"{base_url}/biomes/{x}/{y}")
+    if response.status_code == 200:
+       
+        ruta =  f"entrda\plano{x}_{y}.npy"
+        os.makedirs(os.path.dirname(ruta), exist_ok=True)
+        with open(ruta, "wb") as f:
+            f.write(response.content)
+            print(f"Bioma recibido y guardado en: {ruta}")
+        #return response
+    else:
+        print(f"Error al pedir bioma: {response.status_code}")
+        #return None
+
+
+# Función para obtener posiciones
+def obtener_posiciones(id_cliente):
+    response = requests.get(f"{base_url}/lista_posiciones/{id_cliente}")
+    if response.status_code == 200:
+        print(f"Posiciones recibidas: {response.json()}")
+    else:
+        print(f"Error al obtener posiciones: {response.status_code}")
+
+# Función para hacer logout
+def logout(id):
+    response = requests.post(f"{base_url}/logout/{id}")
+    if response.status_code == 200:
+        print(f"Logout exitoso: {response.json()}")
+    else:
+        print(f"Error en logout: {response.status_code}")
+
+def main():
+    # Login
+    user_id = login()
+    if user_id is None:
+        exit()
+
+    # Mandar posición aleatoria
+    x, y = random.randint(0, 10), random.randint(0, 10)
+    mandar_posicion(user_id, x, y)
+
+    # Pedir objeto y guardarlo en una variable
+    objeto = pedir_objeto(x, y)
+
+    # Mandar otra posición aleatoria
+    time.sleep(30)
+    x, y = random.randint(0, 10), random.randint(0, 10)
+    mandar_posicion(user_id, x, y)
+
+    # Pedir bioma
+    bioma = pedir_bioma(x, y)
+
+    # Obtener posiciones
+    obtener_posiciones(user_id)
+
+    # Logout
+    time.sleep(60)
+    logout(user_id)
+
+# if __name__ == "__main__":
+#     main()

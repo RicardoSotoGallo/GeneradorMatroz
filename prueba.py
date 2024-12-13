@@ -1,9 +1,45 @@
 import time
 import asyncio
 import numpy as np
+import websockets
+import llamadaServer
+import threading
+import os
 
-a = np.array([1,2,2,3,4,5])
-c = np.array([0,1,0,1,1,0])
-b = np.where(c == 1,a,200)
-print(a)
-print(b)
+#Borramos los archivos de chunk
+carpeta = "entrda"
+if os.path.exists(carpeta) and os.path.isdir(carpeta):
+    for archivo in os.listdir(carpeta):
+        ruta_archivo = os.path.join(carpeta, archivo)
+        
+        if os.path.isfile(ruta_archivo) and "Cabecera.txt" != archivo:
+            os.remove(ruta_archivo)  # Elimina el archivo
+            print(f"Archivo eliminado: {ruta_archivo}")
+#borramos archivo de arboles
+carpeta = "arboles"
+if os.path.exists(carpeta) and os.path.isdir(carpeta):
+    for archivo in os.listdir(carpeta):
+        ruta_archivo = os.path.join(carpeta, archivo)
+        
+        if os.path.isfile(ruta_archivo) and "CabezeraArbol.txt" != archivo:
+            os.remove(ruta_archivo)  # Elimina el archivo
+            print(f"Archivo eliminado: {ruta_archivo}")
+
+def main():
+        llamadaServer.siguientePedido(1,1)
+        hilo = threading.Thread(target= llamadaServer.pedir_bioma)
+        print("Debe de estar antes")
+        hilo.start()
+        
+
+        
+
+        #print(target)
+        # np.save(f"entrda\plano{1}_{1}.npy",target)
+        while not(os.path.isfile(f"entrda\plano{1}_{1}.npy")):
+            print("Cargando")
+        matriz = np.load(f"entrda\plano{1}_{1}.npy")
+        print(matriz)
+            
+
+main()

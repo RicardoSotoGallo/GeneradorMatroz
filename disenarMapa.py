@@ -2,18 +2,15 @@ import numpy as np
 from leerNumpy import devolverMapas
 import os
 import llamadaServer
-import asyncio
-import websockets
+import threading
 
 class matrizMapa():
         
-    async def iniciar(self,web,webIde):
+    def iniciar(self):
         self.sizeUnChunk = []
-        self.url = web
-        self.webIde = webIde
         self.espera = True #estamos esperando a que venga
-        self.vacio = False
-        await self.iniciarMapa(web)
+        #self.vacio = False
+        self.iniciarMapa()
         # while self.espera:
         #     #print("Conectando ... ")
         #     pass
@@ -25,7 +22,7 @@ class matrizMapa():
         self.posicionRelativa = [0,0]
         self.pendiente = []
         self.direPendite = ""
-        self.vacio = True #La lista esta vacia
+        #self.vacio = True #La lista esta vacia
 
         
     def insertarArboles(self,mapa,arboles):
@@ -33,16 +30,32 @@ class matrizMapa():
         mapa = np.where((arboles == 0) | (mapa == 0) | (mapa == 1) | (mapa == 2) | (mapa == 5),mapa,200)
         return mapa
 
-    async def solicitarChunks(self,posiciones,web):
+    def solicitarChunks(self,posiciones):
         #async with websockets.connect(web) as websocket:
         print("Conexión establecida con el servidor.")
         buscamos =list (map(lambda x : f"entrda\plano{x[0]}_{x[1]}.npy",posiciones))
         for i,j in zip (buscamos,posiciones):
             if not(os.path.isfile(i)):
                 print(f"Cargado el -> {j}")
-                await llamadaServer.recibir_chunk(self.webIde,f"{j[0]},{j[1]}")
+                llamadaServer.siguientePedido(j[0],j[1])
+                llamadaServer.pedir_bioma()
+                llamadaServer.pedir_objeto()
             else:
                 print(f"Estan cargado {i}")
+
+    def solicitarChunksHilo(self,xPos,yPos):
+        #async with websockets.connect(web) as websocket:
+
+        buscamos = f"entrda\plano{xPos}_{yPos}.npy"
+        if not(os.path.isfile(buscamos)):
+            print(f"Cargado el -> ({xPos} , {yPos})")
+            llamadaServer.siguientePedido(xPos,yPos)
+            hiloBioma =  threading.Thread( target= llamadaServer.pedir_bioma )
+            hiloObjeto = threading.Thread( target= llamadaServer.pedir_objeto)
+            hiloBioma.start()
+            hiloObjeto.start()
+        else:
+            print(f"Estan cargado ({xPos} , {yPos})")
     
     def comprobarCarga(self,posiciones):
         buscamos =list (map(lambda x : f"entrda\plano{x[0]}_{x[1]}.npy",posiciones))
@@ -122,7 +135,7 @@ class matrizMapa():
             else:
                 print("Tamaño incorrecto")
 
-    async def iniciarMapa(self,web):
+    def iniciarMapa(self):
         """
         Crea una nueva matriz 
         """
@@ -132,7 +145,7 @@ class matrizMapa():
                     (1,-1),(1,0),(1,1),
                     (-1,-1),(-1,0),(-1,1)]
         
-        await self.solicitarChunks(posiciones,web)
+        self.solicitarChunks(posiciones)
 
         self.comprobarCarga(posiciones)
 
@@ -157,42 +170,58 @@ class matrizMapa():
                     "izquierda")
         self.espera = False
 
-    async def comprobarCambio(self,posX,posY):
-        if self.vacio and not (self.espera):
+    def comprobarCambio(self,posX,posY):
+        if not( self.espera):
+            
             #Sobrepasamos margen Izquierda
             if( (posX - self.sizeX[0]) <= self.rangoCambiar ):
-                self.sizeX = [self.sizeX[0] - self.sizeUnChunk[0] ,
-                            self.sizeX[1] - self.sizeUnChunk[0]]
-                self.chunkX = [self.chunkX[0] -1 , self.chunkX[1] -1]
-                self.matriz = self.matriz[:2*self.sizeUnChunk[0],:]
-                self.pendiente = [f"entrda\plano{self.chunkX[0]}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)]
+                self.enCamino = False
+                # self.sizeX = [self.sizeX[0] - self.sizeUnChunk[0] ,
+                #               self.sizeX[1] - self.sizeUnChunk[0]]
+                # self.chunkX = [self.chunkX[0] -1 , self.chunkX[1] -1]
+                #self.matriz = self.matriz[:2*self.sizeUnChunk[0],:]
+                #Posiciones a cargar
+                self.pendiente = [f"entrda\plano{self.chunkX[0]-1}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)]
+                self.objetoPendiente = [f"arboles/arbol{self.chunkX[0]-1}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)]
+                #Acciones pedida
                 self.direPendite = "izquierda"
-                self.vacio = False
-                self.espera = True
+                #indice que indica chunk estamos cargando
+                self.posicionEspera = 0
+                #Posiciones a cargar
                 listaPosi = []
                 for i in range(self.chunkY[0],self.chunkY[1]+1):
-                    listaPosi.append((self.chunkX[0],i))
-                await self.solicitarChunks(listaPosi,self.url)
-                # self.anadirMatriz(
-                #     [f"entrda\plano{self.chunkX[0]}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)],
-                #     "izquierda"
-                # )
-                # self.posicionRelativa[0] = self.posicionRelativa[0] + self.sizeUnChunk[0]
-            
+                    listaPosi.append((self.chunkX[0]-1,i))
+                
+                self.coordenadaPendiente = listaPosi
+
+                #iniciamos la espera
+                self.espera = True
             #Sobrepasamos margen Derecha
             elif( (self.sizeX[1] - posX) <= self.rangoCambiar ):
-                self.sizeX = [self.sizeX[0] + self.sizeUnChunk[0] ,
-                            self.sizeX[1] + self.sizeUnChunk[0]]
-                self.chunkX = [self.chunkX[0] +1 , self.chunkX[1] +1]
-                self.matriz = self.matriz[self.sizeUnChunk[0]:,:]
-                self.pendiente = [f"entrda\plano{self.chunkX[1]}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)]
+                self.enCamino = False
+                # self.sizeX = [self.sizeX[0] + self.sizeUnChunk[0] ,
+                #             self.sizeX[1] + self.sizeUnChunk[0]]
+                # self.chunkX = [self.chunkX[0] +1 , self.chunkX[1] +1]
+                # self.matriz = self.matriz[self.sizeUnChunk[0]:,:]
+                #Posiciones a cargar
+                self.pendiente = [f"entrda\plano{self.chunkX[1]+1}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)]
+                self.objetoPendiente = [f"arboles/arbol{self.chunkX[1]+1}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)]
+                #Acciones pedida
                 self.direPendite = "derecha"
-                self.vacio = False
-                self.espera = True
+                #indice que indica chunk estamos cargando
+                self.posicionEspera = 0
+                #creamos lista de posiciones
                 listaPosi = []
                 for i in range(self.chunkY[0],self.chunkY[1]+1):
-                    listaPosi.append((self.chunkX[1],i))
-                await self.solicitarChunks(listaPosi,self.url)
+                    listaPosi.append((self.chunkX[1]+1,i))
+                
+                self.coordenadaPendiente = listaPosi
+                
+                #inciamos espera
+                self.espera = True
+
+                #self.solicitarChunksHilo(xPos=listaPosi[0][0],yPos=listaPosi[0][1])
+                #await self.solicitarChunks(listaPosi,self.url)
                 # self.anadirMatriz(
                 #     [f"entrda\plano{self.chunkX[1]}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)],
                 #     "derecha"
@@ -201,20 +230,29 @@ class matrizMapa():
             
             #Sobre pasa margen Arriba
             elif( (posY - self.sizeY[0]) <= self.rangoCambiar ):
-                self.sizeY = [self.sizeY[0] - self.sizeUnChunk[1] ,
-                            self.sizeY[1] - self.sizeUnChunk[1]]
-                self.chunkY = [self.chunkY[0] -1 , self.chunkY[1] -1]
-                #self.matriz = self.matriz[:,self.sizeUnChunk[1]:]
-                self.matriz = self.matriz[:,:2*self.sizeUnChunk[1]]
-
-                self.pendiente = [f"entrda\plano{i}_{self.chunkY[0]}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)]
+                self.enCamino = False
+                # self.sizeY = [self.sizeY[0] - self.sizeUnChunk[1] ,
+                #             self.sizeY[1] - self.sizeUnChunk[1]]
+                # self.chunkY = [self.chunkY[0] -1 , self.chunkY[1] -1]
+                # #self.matriz = self.matriz[:,self.sizeUnChunk[1]:]
+                # self.matriz = self.matriz[:,:2*self.sizeUnChunk[1]]
+                #Posiciones a cargar
+                self.pendiente = [f"entrda\plano{i}_{self.chunkY[0] -1}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)]
+                self.objetoPendiente = [f"arboles/arbol{i}_{self.chunkY[0] -1}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)]
+                #Acciones pedida
                 self.direPendite = "abajo"
-                self.vacio = False
-                self.espera = True
+                #indice que indica chunk estamos cargando
+                self.posicionEspera = 0
+               #Posiciones a cargar
                 listaPosi = []
                 for i in range(self.chunkX[0],self.chunkX[1]+1):
-                    listaPosi.append((i,self.chunkY[0]))
-                await self.solicitarChunks(listaPosi,self.url)
+                    listaPosi.append((i,self.chunkY[0] -1))
+                self.coordenadaPendiente = listaPosi
+                
+                #self.solicitarChunksHilo(xPos=listaPosi[0][0],yPos=listaPosi[0][1])
+                #iniciamos espera
+                self.espera = True
+                #await self.solicitarChunks(listaPosi,self.url)
 
                 # self.anadirMatriz(
                 #     [f"entrda\plano{i}_{self.chunkY[0]}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)],
@@ -224,43 +262,230 @@ class matrizMapa():
                 
             #Sobre pasa margen Abajo
             elif( (self.sizeY[1] - posY) <= self.rangoCambiar ):
-                self.sizeY = [self.sizeY[0] + self.sizeUnChunk[0] ,
-                            self.sizeY[1] + self.sizeUnChunk[0]]
-                self.chunkY = [self.chunkY[0] +1 , self.chunkY[1] +1]
-                #self.matriz = self.matriz[:,:2*self.sizeUnChunk[1]]
-                self.matriz = self.matriz[:,self.sizeUnChunk[1]:]
+                self.enCamino = False
+                # self.sizeY = [self.sizeY[0] + self.sizeUnChunk[0] ,
+                #             self.sizeY[1] + self.sizeUnChunk[0]]
+                # self.chunkY = [self.chunkY[0] +1 , self.chunkY[1] +1]
+                # #self.matriz = self.matriz[:,:2*self.sizeUnChunk[1]]
+                # self.matriz = self.matriz[:,self.sizeUnChunk[1]:]
 
-                self.pendiente = [f"entrda\plano{i}_{self.chunkY[1]}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)]
+                #Posiciones a cargar
+                self.pendiente = [f"entrda\plano{i}_{self.chunkY[1] +1}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)]
+                self.objetoPendiente = [f"arboles/arbol{i}_{self.chunkY[1] +1}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)]
+                #Acciones pedida
                 self.direPendite = "arriba"
-                self.vacio = False
-                self.espera = True
+                #indice que indica chunk estamos cargando
+                self.posicionEspera = 0
+                #Posicion cargada                
                 listaPosi = []
                 for i in range(self.chunkX[0],self.chunkX[1]+1):
-                    listaPosi.append((i,self.chunkY[1]))
-                await self.solicitarChunks(listaPosi,self.url)
+                    listaPosi.append((i,self.chunkY[1] +1))
+                
+                self.coordenadaPendiente = listaPosi
+                # self.solicitarChunksHilo(xPos=listaPosi[0][0],yPos=listaPosi[0][1])
+                # self.direccionPendiente = self.pendiente
+                
+                #iniciamos espera
+                self.espera = True
+                #self.solicitarChunks(listaPosi)
 
                 # self.anadirMatriz(
                 #     [f"entrda\plano{i}_{self.chunkY[1]}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)],
                 #     "arriba"
                 # )
                 # self.posicionRelativa[1] = self.posicionRelativa[1] - self.sizeUnChunk[1]
-        elif not self.vacio:
-            self.vacio = True
-            for i in self.pendiente:
-                if not(os.path.isfile(i)):
-                    self.vacio = False
+                
+                
+                #self.solicitarChunksHilo(xPos=listaPosi[0][0],yPos=listaPosi[0][1])
+                # self.anadirMatriz(
+                #     [f"entrda\plano{self.chunkX[0]}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)],
+                #     "izquierda"
+                # )
+                # self.posicionRelativa[0] = self.posicionRelativa[0] + self.sizeUnChunk[0]
+        elif self.espera and self.posicionEspera < 3:
+            #os.system("cls")
+            print(f"posicionesBuscadas -> ({self.coordenadaPendiente[self.posicionEspera][0]},{self.coordenadaPendiente[self.posicionEspera][1]})")
+            print(f"posicion espera {self.pendiente[self.posicionEspera]} ===== {self.objetoPendiente[self.posicionEspera]}")
+            print(f"chun cargado -> {os.path.isfile(self.pendiente[self.posicionEspera])}")
+            print(f"objetos cargados -> {os.path.isfile(self.objetoPendiente[self.posicionEspera])}")
+            if os.path.isfile(self.pendiente[self.posicionEspera]) and os.path.isfile(self.objetoPendiente[self.posicionEspera]):
+                self.posicionEspera += 1
+                self.enCamino = False
+            else:
+                if not (self.enCamino):
+                    print(f"Solicitando -> ({self.coordenadaPendiente[self.posicionEspera][0]}, {self.coordenadaPendiente[self.posicionEspera][1]})")
+                    self.solicitarChunksHilo(xPos= self.coordenadaPendiente[self.posicionEspera][0]
+                                            ,yPos= self.coordenadaPendiente[self.posicionEspera][1])
+                    self.enCamino = True
         else:
+            self.posicionEspera = 0
+            self.espera = False
             self.anadirMatriz(
                     self.pendiente,
                     self.direPendite
                 )
-            self.espera = False
+            
             if self.direPendite == "izquierda":
+                #Actualizamos posicion relativa
                 self.posicionRelativa[0] = self.posicionRelativa[0] + self.sizeUnChunk[0]
+                #tamaño de x
+                self.sizeX = [self.sizeX[0] - self.sizeUnChunk[0] ,
+                              self.sizeX[1] - self.sizeUnChunk[0]]
+                #actualizamos los chunk escogidos
+                self.chunkX = [self.chunkX[0] -1 , self.chunkX[1] -1]
+                #luego tamaño
+                self.matriz = self.matriz[:3*self.sizeUnChunk[0],:]
+                
             elif self.direPendite == "derecha":
                 self.posicionRelativa[0] = self.posicionRelativa[0] - self.sizeUnChunk[0]
+                self.sizeX = [self.sizeX[0] + self.sizeUnChunk[0] ,
+                              self.sizeX[1] + self.sizeUnChunk[0]]
+                self.chunkX = [self.chunkX[0] +1 , self.chunkX[1] +1]
+                self.matriz = self.matriz[self.sizeUnChunk[0]:,:]
+                
             elif self.direPendite == "abajo":
                 self.posicionRelativa[1] = self.posicionRelativa[1] + self.sizeUnChunk[1]
+                self.sizeY = [self.sizeY[0] - self.sizeUnChunk[1] ,
+                              self.sizeY[1] - self.sizeUnChunk[1]]
+                self.chunkY = [self.chunkY[0] -1 , self.chunkY[1] -1]
+                #self.matriz = self.matriz[:,self.sizeUnChunk[1]:]
+                self.matriz = self.matriz[:,:3*self.sizeUnChunk[1]]
+                
             elif self.direPendite == "arriba":
                 self.posicionRelativa[1] = self.posicionRelativa[1] - self.sizeUnChunk[1]
+                self.sizeY = [self.sizeY[0] + self.sizeUnChunk[0] ,
+                            self.sizeY[1] + self.sizeUnChunk[0]]
+                self.chunkY = [self.chunkY[0] +1 , self.chunkY[1] +1]
+                #self.matriz = self.matriz[:,:2*self.sizeUnChunk[1]]
+                self.matriz = self.matriz[:,self.sizeUnChunk[1]:]
+
+        
+                
+
+
+        # if self.vacio and not (self.espera):
+        #     #Sobrepasamos margen Izquierda
+        #     if( (posX - self.sizeX[0]) <= self.rangoCambiar ):
+        #         self.sizeX = [self.sizeX[0] - self.sizeUnChunk[0] ,
+        #                     self.sizeX[1] - self.sizeUnChunk[0]]
+        #         self.chunkX = [self.chunkX[0] -1 , self.chunkX[1] -1]
+        #         self.matriz = self.matriz[:2*self.sizeUnChunk[0],:]
+        #         self.pendiente = [f"entrda\plano{self.chunkX[0]}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)]
+        #         self.direPendite = "izquierda"
+        #         self.vacio = False
+        #         self.espera = True
+        #         listaPosi = []
+        #         for i in range(self.chunkY[0],self.chunkY[1]+1):
+        #             listaPosi.append((self.chunkX[0],i))
+                
+        #         self.coordenadaPendiente = listaPosi
+        #         self.solicitarChunksHilo(xPos=listaPosi[0][0],yPos=listaPosi[0][1])
+        #         self.direccionPendiente = self.pendiente
+        #         # self.anadirMatriz(
+        #         #     [f"entrda\plano{self.chunkX[0]}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)],
+        #         #     "izquierda"
+        #         # )
+        #         # self.posicionRelativa[0] = self.posicionRelativa[0] + self.sizeUnChunk[0]
+            
+        #     #Sobrepasamos margen Derecha
+        #     elif( (self.sizeX[1] - posX) <= self.rangoCambiar ):
+        #         self.sizeX = [self.sizeX[0] + self.sizeUnChunk[0] ,
+        #                     self.sizeX[1] + self.sizeUnChunk[0]]
+        #         self.chunkX = [self.chunkX[0] +1 , self.chunkX[1] +1]
+        #         self.matriz = self.matriz[self.sizeUnChunk[0]:,:]
+        #         self.pendiente = [f"entrda\plano{self.chunkX[1]}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)]
+        #         self.direPendite = "derecha"
+        #         self.vacio = False
+        #         self.espera = True
+        #         listaPosi = []
+        #         for i in range(self.chunkY[0],self.chunkY[1]+1):
+        #             listaPosi.append((self.chunkX[1],i))
+                
+        #         self.coordenadaPendiente = listaPosi
+        #         self.solicitarChunksHilo(xPos=listaPosi[0][0],yPos=listaPosi[0][1])
+        #         self.direccionPendiente = self.pendiente
+        #         #await self.solicitarChunks(listaPosi,self.url)
+        #         # self.anadirMatriz(
+        #         #     [f"entrda\plano{self.chunkX[1]}_{i}.npy" for i in range(self.chunkY[0],self.chunkY[1]+1)],
+        #         #     "derecha"
+        #         # )
+        #         # self.posicionRelativa[0] = self.posicionRelativa[0] - self.sizeUnChunk[0]
+            
+        #     #Sobre pasa margen Arriba
+        #     elif( (posY - self.sizeY[0]) <= self.rangoCambiar ):
+        #         self.sizeY = [self.sizeY[0] - self.sizeUnChunk[1] ,
+        #                     self.sizeY[1] - self.sizeUnChunk[1]]
+        #         self.chunkY = [self.chunkY[0] -1 , self.chunkY[1] -1]
+        #         #self.matriz = self.matriz[:,self.sizeUnChunk[1]:]
+        #         self.matriz = self.matriz[:,:2*self.sizeUnChunk[1]]
+
+        #         self.pendiente = [f"entrda\plano{i}_{self.chunkY[0]}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)]
+        #         self.direPendite = "abajo"
+        #         self.vacio = False
+        #         self.espera = True
+        #         listaPosi = []
+        #         for i in range(self.chunkX[0],self.chunkX[1]+1):
+        #             listaPosi.append((i,self.chunkY[0]))
+                
+        #         self.coordenadaPendiente = listaPosi
+        #         self.solicitarChunksHilo(xPos=listaPosi[0][0],yPos=listaPosi[0][1])
+        #         self.direccionPendiente = self.pendiente
+        #         #await self.solicitarChunks(listaPosi,self.url)
+
+        #         # self.anadirMatriz(
+        #         #     [f"entrda\plano{i}_{self.chunkY[0]}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)],
+        #         #     "abajo"
+        #         # )
+        #         # self.posicionRelativa[1] = self.posicionRelativa[1] + self.sizeUnChunk[1]
+                
+        #     #Sobre pasa margen Abajo
+        #     elif( (self.sizeY[1] - posY) <= self.rangoCambiar ):
+        #         self.sizeY = [self.sizeY[0] + self.sizeUnChunk[0] ,
+        #                     self.sizeY[1] + self.sizeUnChunk[0]]
+        #         self.chunkY = [self.chunkY[0] +1 , self.chunkY[1] +1]
+        #         #self.matriz = self.matriz[:,:2*self.sizeUnChunk[1]]
+        #         self.matriz = self.matriz[:,self.sizeUnChunk[1]:]
+
+        #         self.pendiente = [f"entrda\plano{i}_{self.chunkY[1]}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)]
+        #         self.direPendite = "arriba"
+        #         self.vacio = False
+        #         self.espera = True
+        #         listaPosi = []
+        #         for i in range(self.chunkX[0],self.chunkX[1]+1):
+        #             listaPosi.append((i,self.chunkY[1]))
+                
+        #         self.coordenadaPendiente = listaPosi
+        #         self.solicitarChunksHilo(xPos=listaPosi[0][0],yPos=listaPosi[0][1])
+        #         self.direccionPendiente = self.pendiente
+        #         #self.solicitarChunks(listaPosi)
+
+        #         # self.anadirMatriz(
+        #         #     [f"entrda\plano{i}_{self.chunkY[1]}.npy" for i in range(self.chunkX[0],self.chunkX[1]+1)],
+        #         #     "arriba"
+        #         # )
+        #         # self.posicionRelativa[1] = self.posicionRelativa[1] - self.sizeUnChunk[1]
+        # elif not self.vacio:
+        #     self.vacio = True
+        #     for nombre,posi in zip(self.direccionPendiente,self.coordenadaPendiente):
+        #         if not(os.path.isfile(nombre)):
+        #             self.vacio = False
+        #         else:
+        #             self.direccionPendiente.remove(nombre)
+        #             self.coordenadaPendiente.remove(posi)
+        #             if len(self.pendiente) > 0:
+        #                 self.solicitarChunksHilo(self.coordenadaPendiente[0][0],self.coordenadaPendiente[0][1])
+        # else:
+        #     self.anadirMatriz(
+        #             self.pendiente,
+        #             self.direPendite
+        #         )
+        #     self.espera = False
+        #     if self.direPendite == "izquierda":
+        #         self.posicionRelativa[0] = self.posicionRelativa[0] + self.sizeUnChunk[0]
+        #     elif self.direPendite == "derecha":
+        #         self.posicionRelativa[0] = self.posicionRelativa[0] - self.sizeUnChunk[0]
+        #     elif self.direPendite == "abajo":
+        #         self.posicionRelativa[1] = self.posicionRelativa[1] + self.sizeUnChunk[1]
+        #     elif self.direPendite == "arriba":
+        #         self.posicionRelativa[1] = self.posicionRelativa[1] - self.sizeUnChunk[1]
         
