@@ -3,7 +3,6 @@ import random
 import numpy as np
 import time
 import os
-import mainNumpy
 
 # URL base del servidor
 base_url =  "http://kubernetes.procsmocscimsi.uk/"
@@ -16,6 +15,7 @@ y = 0
 posId = 0
 posX = 0
 posY = 0
+tasaActualizacion = 2
 def siguientePedido(xe,ye):
     global x,y
     x = xe
@@ -40,21 +40,21 @@ def preMandarPosiciones(id, x, y):
 
 # Función para mandar posición
 def mandar_posicion():
-    global posId , posX , posY
+    global posId , posX , posY, tasaActualizacion
     print(f"mandar posi -> ({posX},{posY})")
     response = requests.post(f"{base_url}/posicion/{posId}/{posX}/{posY}")
     if response.status_code == 200:
         print(f"Posición enviada: {response.json()}")
-        mainNumpy.tasaActulizarInfo = 2
+        tasaActualizacion = 2
     else:
         print(f"Error al enviar posición: {response.status_code}")
-        mainNumpy.tasaActulizarInfo = 200
+        tasaActualizacion = 200
 
 
 # Función para pedir objeto
 def pedir_objeto(): #x y
-    global x,y
-    if mainNumpy.tasaActulizarInfo != 200:
+    global x,y,tasaActualizacion
+    if tasaActualizacion != 200:
         response = requests.get(f"{base_url}/objects/{x}/{y}")
         
         if response.status_code == 200:
