@@ -54,7 +54,7 @@ def main():
     contarFrame = 0     #Contar para las animacion
     frameMaximo = 30    #El maximo fotograma que va a tener
     contarActualizarInfo = 0
-    tasaActulizarInfo = 10
+    tasaActulizarInfo = 2
     contarMoviento = 0
     tasaMoviemto = 10
 
@@ -117,7 +117,7 @@ def main():
                     actualY = min([ claseMatriz.sizeY[1], actualY + desplazarY ]) 
                 if teclaPulsadaLista[0] == pygame.K_w:
                     actualY = max([ claseMatriz.sizeY[0] , actualY - desplazarY])
-        clock.tick(15)
+        clock.tick(10)
         
         #Comprobar  si hay que actualizar el mapa
         claseMatriz.comprobarCambio(actualX,actualY)
@@ -166,7 +166,7 @@ def main():
         if contarActualizarInfo == 0:
             llamadaServer.preMandarPosiciones(user_id,actualX,actualY)
             llamadaServer.obtener_posiciones()
-        if contarActualizarInfo == 5:
+        if contarActualizarInfo == 1:
             listaPosiciones = devolverPosiciones()
             
         if contarActualizarInfo == tasaActulizarInfo:
