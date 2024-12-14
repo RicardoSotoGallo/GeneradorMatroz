@@ -3,6 +3,7 @@ import random
 import numpy as np
 import time
 import os
+import mainNumpy
 
 # URL base del servidor
 base_url =  "http://kubernetes.procsmocscimsi.uk/"
@@ -44,25 +45,29 @@ def mandar_posicion():
     response = requests.post(f"{base_url}/posicion/{posId}/{posX}/{posY}")
     if response.status_code == 200:
         print(f"Posición enviada: {response.json()}")
+        mainNumpy.tasaActulizarInfo = 2
     else:
         print(f"Error al enviar posición: {response.status_code}")
+        mainNumpy.tasaActulizarInfo = 200
 
 
 # Función para pedir objeto
 def pedir_objeto(): #x y
     global x,y
-    response = requests.get(f"{base_url}/objects/{x}/{y}")
-    if response.status_code == 200:
-        #f"arboles/arbol{posiciones[0][0]}_{posiciones[0][1]}.npy"
-        ruta = f"arboles/arbol{x}_{y}.npy"
-        os.makedirs(os.path.dirname(ruta), exist_ok=True)
-        with open(ruta, "wb") as f:
-            f.write(response.content)
-        print(f"Objeto recibido y guardado en: {ruta}")
-        return np.load(ruta)
-    else:
-        print(f"Error al pedir objeto: {response.status_code}")
-        return None
+    if mainNumpy.tasaActulizarInfo != 200:
+        response = requests.get(f"{base_url}/objects/{x}/{y}")
+        
+        if response.status_code == 200:
+            #f"arboles/arbol{posiciones[0][0]}_{posiciones[0][1]}.npy"
+            ruta = f"arboles/arbol{x}_{y}.npy"
+            os.makedirs(os.path.dirname(ruta), exist_ok=True)
+            with open(ruta, "wb") as f:
+                f.write(response.content)
+            print(f"Objeto recibido y guardado en: {ruta}")
+            return np.load(ruta)
+        else:
+            print(f"Error al pedir objeto: {response.status_code}")
+            return None
 
 # Función para pedir bioma
 def pedir_bioma(): #x, y

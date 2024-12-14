@@ -26,7 +26,7 @@ if os.path.exists(carpeta) and os.path.isdir(carpeta):
         if os.path.isfile(ruta_archivo) and "CabezeraArbol.txt" != archivo:
             os.remove(ruta_archivo)  # Elimina el archivo
             print(f"Archivo eliminado: {ruta_archivo}")
-
+tasaActulizarInfo = 2
 #prueb
 #websocket = websockets.connect(web)
 def main():
@@ -54,7 +54,7 @@ def main():
     contarFrame = 0     #Contar para las animacion
     frameMaximo = 30    #El maximo fotograma que va a tener
     contarActualizarInfo = 0
-    tasaActulizarInfo = 2
+    
     contarMoviento = 0
     tasaMoviemto = 10
 
