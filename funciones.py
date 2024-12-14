@@ -57,6 +57,7 @@ def dibujarSer(ser,ventana,escalaX,escalaY,posicionX,posicionY):
 def dibujarOtros(posiciones,Xrel,Yrel,xAbs,yAbs,dx,dy,MapaScript,MapaEscala,ventana,tVentanaX,tVentanaY):
     valor = '100'
     for i in posiciones:
+        
         #print(i)
         vectorDiferencia = sumarVectores(i,[-xAbs,-yAbs])
         #posRel = sumarVectores(vectorDiferencia,[Xrel,Yrel])
@@ -65,13 +66,14 @@ def dibujarOtros(posiciones,Xrel,Yrel,xAbs,yAbs,dx,dy,MapaScript,MapaEscala,vent
         my = posRel[1]
         #print(f"absoluta ({i[0]},{i[1]})")
         #print(f"diferencia ({mx},{my})")
-        imagen = pygame.transform.scale(
-                    MapaScript[valor],
-                    (dx*MapaEscala[valor][0],dy*MapaEscala[valor][1])
-                    )
-        posicion = MapaScript[valor].get_rect()
-        posicion.move_ip(mx*dx+tVentanaX*dx,my*dy+tVentanaY*dy)
-        ventana.blit(imagen,posicion)
+        if abs(mx) < 400 and abs(my) < 400:
+            imagen = pygame.transform.scale(
+                        MapaScript[valor],
+                        (dx*MapaEscala[valor][0],dy*MapaEscala[valor][1])
+                        )
+            posicion = MapaScript[valor].get_rect()
+            posicion.move_ip(mx*dx+tVentanaX*dx,my*dy+tVentanaY*dy)
+            ventana.blit(imagen,posicion)
 
 def sumarVectores(v1,v2):
     return [v1[0] + v2[0] , v1[1] + v2[1]]
