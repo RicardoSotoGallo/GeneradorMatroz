@@ -54,7 +54,7 @@ def main():
     contarFrame = 0     #Contar para las animacion
     frameMaximo = 30    #El maximo fotograma que va a tener
     contarActualizarInfo = 0
-    tasaActulizarInfo = 30
+    tasaActulizarInfo = 20
     contarMoviento = 0
     tasaMoviemto = 10
 
@@ -134,10 +134,10 @@ def main():
                     #10,10,
                     int( ventanax/(dx*2)) ,int( ventanay/(dy*2)),
                     dx,dy)
-        os.system('cls')
+        #os.system('cls')
         #Actualizar la posicion del prota y la imagen
         prota.actualizar(teclaPulsadaLista,contarFrame)
-        print(f"Posicion({actualX},{actualY})  Posicion relativa({actualX + claseMatriz.posicionRelativa[0] , actualY + claseMatriz.posicionRelativa[1]})")
+        #print(f"Posicion({actualX},{actualY})  Posicion relativa({actualX + claseMatriz.posicionRelativa[0] , actualY + claseMatriz.posicionRelativa[1]})")
             
         # print(f"size mapa X {claseMatriz.sizeX}  size mapa Y {claseMatriz.sizeY}")
         # print(f"Chunk cargado X {claseMatriz.chunkX}  Chunk cargado Y {claseMatriz.chunkY}")
@@ -166,10 +166,13 @@ def main():
         if contarActualizarInfo == tasaActulizarInfo:
             contarActualizarInfo = 0
             llamadaServer.preMandarPosiciones(user_id,actualX,actualY)
-            hiloMandar = threading.Thread(target=llamadaServer.mandar_posicion)
-            hiloMandar.start()
-            hiloRecopilar = threading.Thread(target=llamadaServer.obtener_posiciones)
-            hiloRecopilar.start()
+            llamadaServer.obtener_posiciones()
+            llamadaServer.mandar_posicion()
+
+            # hiloMandar = threading.Thread(target=llamadaServer.mandar_posicion)
+            # hiloMandar.start()
+            # hiloRecopilar = threading.Thread(target=llamadaServer.obtener_posiciones)
+            # hiloRecopilar.start()
             listaPosiciones = devolverPosiciones()
             
             

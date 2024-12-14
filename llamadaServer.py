@@ -40,6 +40,7 @@ def preMandarPosiciones(id, x, y):
 # Función para mandar posición
 def mandar_posicion():
     global posId , posX , posY
+    print(f"mandar posi -> ({posX},{posY})")
     response = requests.post(f"{base_url}/posicion/{posId}/{posX}/{posY}")
     if response.status_code == 200:
         print(f"Posición enviada: {response.json()}")
@@ -69,7 +70,7 @@ def pedir_bioma(): #x, y
     response = requests.get(f"{base_url}/biomes/{x}/{y}")
     if response.status_code == 200:
        
-        ruta =  f"entrda\plano{x}_{y}.npy"
+        ruta =  f"entrda/plano{x}_{y}.npy"
         os.makedirs(os.path.dirname(ruta), exist_ok=True)
         with open(ruta, "wb") as f:
             f.write(response.content)

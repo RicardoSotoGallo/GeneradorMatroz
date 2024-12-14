@@ -63,8 +63,8 @@ def dibujarOtros(posiciones,Xrel,Yrel,xAbs,yAbs,dx,dy,MapaScript,MapaEscala,vent
         posRel = vectorDiferencia
         mx = posRel[0]
         my = posRel[1]
-        print(f"absoluta ({i[0]},{i[1]})")
-        print(f"diferencia ({mx},{my})")
+        #print(f"absoluta ({i[0]},{i[1]})")
+        #print(f"diferencia ({mx},{my})")
         imagen = pygame.transform.scale(
                     MapaScript[valor],
                     (dx*MapaEscala[valor][0],dy*MapaEscala[valor][1])
