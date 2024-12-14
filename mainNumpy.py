@@ -54,7 +54,7 @@ def main():
     contarFrame = 0     #Contar para las animacion
     frameMaximo = 30    #El maximo fotograma que va a tener
     contarActualizarInfo = 0
-    tasaActulizarInfo = 20
+    tasaActulizarInfo = 10
     contarMoviento = 0
     tasaMoviemto = 10
 
@@ -162,18 +162,16 @@ def main():
         
         
         pygame.display.flip()   #Esperamos al siguiente refresco de imagen
-        if contarFrame == frameMaximo: contarFrame = -1     #si los frames llegan a los frame maximo se reinicia
-        if contarActualizarInfo == tasaActulizarInfo:
-            contarActualizarInfo = 0
+        if contarFrame == frameMaximo: contarFrame = -1     #si los frames llegan a los frame maximo se reinicia 
+        if contarActualizarInfo == 0:
             llamadaServer.preMandarPosiciones(user_id,actualX,actualY)
             llamadaServer.obtener_posiciones()
-            llamadaServer.mandar_posicion()
-
-            # hiloMandar = threading.Thread(target=llamadaServer.mandar_posicion)
-            # hiloMandar.start()
-            # hiloRecopilar = threading.Thread(target=llamadaServer.obtener_posiciones)
-            # hiloRecopilar.start()
+        if contarActualizarInfo == 5:
             listaPosiciones = devolverPosiciones()
+            
+        if contarActualizarInfo == tasaActulizarInfo:
+            llamadaServer.mandar_posicion()
+            contarActualizarInfo = -1
             
             
     pygame.quit()
