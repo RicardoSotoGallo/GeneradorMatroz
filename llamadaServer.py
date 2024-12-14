@@ -48,9 +48,7 @@ def mandar_posicion():
         tasaActualizacion = 2
     else:
         print(f"Error al enviar posición: {response.status_code}")
-        tasaActualizacion = 200
-        logout(posId)
-        posId = login()
+        tasaActualizacion = 100
 
 
 # Función para pedir objeto
