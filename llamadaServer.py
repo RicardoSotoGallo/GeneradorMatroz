@@ -5,10 +5,16 @@ import time
 import os
 
 # URL base del servidor
-base_url = "http://kubernetes.procsmocscimsi.uk/"
+base_url =  "http://kubernetes.procsmocscimsi.uk/"
+#"http://kubernetes.procsmocscimsi.uk/"
+#"http://127.0.0.1:6969"
+
 x = 0
 y = 0
 
+posId = 0
+posX = 0
+posY = 0
 def siguientePedido(xe,ye):
     global x,y
     x = xe
@@ -25,9 +31,16 @@ def login():
         print(f"Error en login: {response.status_code}")
         return None
 
+def preMandarPosiciones(id, x, y):
+    global posId,posX,posY
+    posId = id
+    posX = x
+    posY = y
+
 # Función para mandar posición
-def mandar_posicion(id, x, y):
-    response = requests.post(f"{base_url}/posicion/{id}/{x}/{y}")
+def mandar_posicion():
+    global posId , posX , posY
+    response = requests.post(f"{base_url}/posicion/{posId}/{posX}/{posY}")
     if response.status_code == 200:
         print(f"Posición enviada: {response.json()}")
     else:
@@ -68,10 +81,15 @@ def pedir_bioma(): #x, y
 
 
 # Función para obtener posiciones
-def obtener_posiciones(id_cliente):
-    response = requests.get(f"{base_url}/lista_posiciones/{id_cliente}")
+def obtener_posiciones():
+    global posId
+    response = requests.get(f"{base_url}/lista_posiciones/{posId}")
     if response.status_code == 200:
-        print(f"Posiciones recibidas: {response.json()}")
+        posi = response.json()["posiciones"]
+        with open('posiciones.txt', 'w') as fichero:
+            for i in posi:
+                if i != None:
+                    fichero.write(f"{i[0]},{i[1]}\n")
     else:
         print(f"Error al obtener posiciones: {response.status_code}")
 
@@ -111,5 +129,11 @@ def main():
     time.sleep(60)
     logout(user_id)
 
+# user_id = login()
+
+# preMandarPosiciones(user_id,10,20)
+# mandar_posicion()
+# obtener_posiciones()
+# logout(user_id)
 # if __name__ == "__main__":
 #     main()

@@ -304,16 +304,16 @@ class matrizMapa():
                 # self.posicionRelativa[0] = self.posicionRelativa[0] + self.sizeUnChunk[0]
         elif self.espera and self.posicionEspera < 3:
             #os.system("cls")
-            print(f"posicionesBuscadas -> ({self.coordenadaPendiente[self.posicionEspera][0]},{self.coordenadaPendiente[self.posicionEspera][1]})")
-            print(f"posicion espera {self.pendiente[self.posicionEspera]} ===== {self.objetoPendiente[self.posicionEspera]}")
-            print(f"chun cargado -> {os.path.isfile(self.pendiente[self.posicionEspera])}")
-            print(f"objetos cargados -> {os.path.isfile(self.objetoPendiente[self.posicionEspera])}")
+            # print(f"posicionesBuscadas -> ({self.coordenadaPendiente[self.posicionEspera][0]},{self.coordenadaPendiente[self.posicionEspera][1]})")
+            # print(f"posicion espera {self.pendiente[self.posicionEspera]} ===== {self.objetoPendiente[self.posicionEspera]}")
+            # print(f"chun cargado -> {os.path.isfile(self.pendiente[self.posicionEspera])}")
+            # print(f"objetos cargados -> {os.path.isfile(self.objetoPendiente[self.posicionEspera])}")
             if os.path.isfile(self.pendiente[self.posicionEspera]) and os.path.isfile(self.objetoPendiente[self.posicionEspera]):
                 self.posicionEspera += 1
                 self.enCamino = False
             else:
                 if not (self.enCamino):
-                    print(f"Solicitando -> ({self.coordenadaPendiente[self.posicionEspera][0]}, {self.coordenadaPendiente[self.posicionEspera][1]})")
+                    # print(f"Solicitando -> ({self.coordenadaPendiente[self.posicionEspera][0]}, {self.coordenadaPendiente[self.posicionEspera][1]})")
                     self.solicitarChunksHilo(xPos= self.coordenadaPendiente[self.posicionEspera][0]
                                             ,yPos= self.coordenadaPendiente[self.posicionEspera][1])
                     self.enCamino = True

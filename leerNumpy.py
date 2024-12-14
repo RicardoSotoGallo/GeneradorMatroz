@@ -11,3 +11,13 @@ def devolverMapas(dir:"str"="Dibujos/definir2.txt"):
             
             diccionarioEscalas[split1[0]] = [int(split2[0]),int(split2[1])]
     return diccionarioNombre,diccionarioEscalas
+
+def devolverPosiciones():
+    posi = []
+    dir = 'posiciones.txt'
+    with open(dir,'r') as fichero:
+        for linea in fichero:
+                enTexto = linea.replace("\n","").split(",")
+                print(enTexto)
+                posi.append([ int(enTexto[0]),int(enTexto[1]) ])
+    return posi
